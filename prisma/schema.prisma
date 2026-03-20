@@ -1,11 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl =env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Account {
@@ -32,35 +32,22 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  plan          String    @default("free")
-  stripeCustomerId String? @unique
-  stripeSubscriptionId String?
-  stripePriceId String?
+  id                     String    @id @default(cuid())
+  name                   String?
+  email                  String?   @unique
+  emailVerified          DateTime?
+  image                  String?
+  plan                   String    @default("free")
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?
+  stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
-  accounts      Account[]
-  sessions      Session[]
-  deals         Deal []
-
-}
-model Deal {
-  id        String   @id @default(cuid())
-  title     String
-  url       String?
-  price     Float?
-  analysis  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts               Account[]
+  sessions               Session[]
+  deals                  Deal[]
 }
 
 model VerificationToken {
@@ -69,4 +56,18 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Deal {
+  id                   String   @id @default(cuid())
+  address              String
+  price                Float
+  sqft                 Float?
+  bedrooms             Int?
+  bathrooms            Float?
+  notes                String?
+  analysis             Json
+  createdAt            DateTime @default(now())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
