@@ -69,7 +69,7 @@ focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 Asking Price ($) *
 </label>
 <input
-type="number"
+type="text" inputMode="numeric"
 required
 placeholder="250000"
 value={form.price}
@@ -84,7 +84,7 @@ focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 Square Feet
 </label>
 <input
-type="number"
+type="text" inputMode="numeric"
 placeholder="1400"
 value={form.sqft}
 onChange={(e) => update("sqft"
@@ -100,7 +100,7 @@ focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 Bedrooms
 </label>
 <input
-type="number"
+type="text" inputMode="numeric"
 placeholder="3"
 value={form.bedrooms}
 onChange={(e) => update("bedrooms"
@@ -114,7 +114,7 @@ focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
 Bathrooms
 </label>
 <input
-type="number"
+type="text" inputMode="numeric"
 placeholder="2"
 value={form.bathrooms}
 onChange={(e) => update("bathrooms"
