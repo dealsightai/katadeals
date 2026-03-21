@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -13,7 +15,7 @@ export async function POST(req: Request) {
     Size: ${sqft} sqft | ${bedrooms}bd / ${bathrooms}ba
     Notes: ${notes}
 
-    Provide: deal score (1-10), estimated ARV, cash flow estimate, 
+    Provide: deal score (1-10), estimated ARV, cash flow estimate,
     cap rate, red flags, and a buy/hold/pass recommendation.
     Format as JSON.
   `;
@@ -25,5 +27,23 @@ export async function POST(req: Request) {
   });
 
   const analysis = JSON.parse(response.choices[0].message.content || "{}");
-  return NextResponse.json(analysis);
+
+  const session = await getServerSession();
+  
+  const deal = await prisma.deal.create({
+    data: {
+      address,
+      price: parseFloat(price),
+      sqft: sqft ? parseFloat(sqft) : null,
+      bedrooms: bedrooms ? parseInt(bedrooms) : null,
+      bathrooms: bathrooms ? parseFloat(bathrooms) : null,
+      notes: notes || null,
+      analysis,
+      userId: session?.user?.email ? 
+        (await prisma.user.findUnique({ where: { email: session.user.email } }))?.id || "" 
+        : "",
+    },
+  });
+
+  return NextResponse.json({ dealId: deal.id, analysis });
 }
