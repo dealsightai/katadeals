@@ -15,8 +15,8 @@ export async function POST(req: Request) {
     Size: ${sqft} sqft | ${bedrooms}bd / ${bathrooms}ba
     Notes: ${notes}
 
-    Provide: deal score (1-10), estimated ARV, cash flow estimate,
-    cap rate, red flags, and a buy/hold/pass recommendation.
+    Provide: deal score (1-10), estimated ARV, estimated monthly rent, cash flow estimate,
+    cap rate, red flags, positives, summary, and a buy/hold/pass recommendation.
     Format as JSON.
   `;
 
@@ -29,21 +29,26 @@ export async function POST(req: Request) {
   const analysis = JSON.parse(response.choices[0].message.content || "{}");
 
   const session = await getServerSession();
-  
-  const deal = await prisma.deal.create({
-    data: {
-      address,
-      price: parseFloat(price),
-      sqft: sqft ? parseFloat(sqft) : null,
-      bedrooms: bedrooms ? parseInt(bedrooms) : null,
-      bathrooms: bathrooms ? parseFloat(bathrooms) : null,
-      notes: notes || null,
-      analysis,
-      userId: session?.user?.email ? 
-        (await prisma.user.findUnique({ where: { email: session.user.email } }))?.id || "" 
-        : "",
-    },
-  });
+  let user = null;
+  if (session?.user?.email) {
+    user = await prisma.user.findUnique({ where: { email: session.user.email } });
+  }
 
-  return NextResponse.json({ dealId: deal.id, analysis });
+  if (user) {
+    const deal = await prisma.deal.create({
+      data: {
+        address,
+        price: parseFloat(price),
+        sqft: sqft ? parseFloat(sqft) : null,
+        bedrooms: bedrooms ? parseInt(bedrooms) : null,
+        bathrooms: bathrooms ? parseFloat(bathrooms) : null,
+        notes: notes || null,
+        analysis,
+        userId: user.id,
+      },
+    });
+    return NextResponse.json({ dealId: deal.id, analysis });
+  }
+
+  return NextResponse.json({ dealId: null, analysis });
 }
