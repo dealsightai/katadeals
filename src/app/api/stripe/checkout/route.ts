@@ -3,7 +3,11 @@ import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2023-10-16",
+  });
+}
 export async function POST(req: Request) {
 const session = await getServerSession(authOptions);
 if (!session?.user?.email) {
