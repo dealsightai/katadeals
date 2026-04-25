@@ -1,2 +1,10 @@
 node_modules
 .env
+.next
+dev.log
+*.save
+*.save.*
+.next/
+dev.log
+src/lib/auth.ts.save
+src/lib/auth.ts.save.1

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "node --trace-deprecation ./node_modules/.bin/next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -14,9 +14,10 @@
     "@prisma/client": "5.22.0",
     "@stripe/stripe-js": "^8.9.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "lucide-react": "^0.577.0",
     "next": "^16.2.0",
-    "next-auth": "^4.24.7",
+    "next-auth": "^4.24.14",
     "nodemailer": "^7.0.13",
     "openai": "^6.29.0",
     "prisma": "5.22.0",
