@@ -8,3 +8,7 @@ dev.log
 dev.log
 src/lib/auth.ts.save
 src/lib/auth.ts.save.1
+.env
+.env.*
+!.env.example
+*.save.*
