@@ -3,7 +3,7 @@ import { useState } from "react";
 
 export default function RefinanceCalculator() {
   const [form, setForm] = useState({ value: "", balance: "", rate: "7.5", term: "30", ltv: "75" });
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<any>(null);
 
   const calculate = () => {
     const value = parseFloat(form.value) || 0;
