@@ -1,0 +1,1 @@
+export default function Page() { return <main className="p-12"><h1 className="text-3xl font-bold">Cash Out Refinance Calculator</h1><p>Coming soon</p></main>; }
