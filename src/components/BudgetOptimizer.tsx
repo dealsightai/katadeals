@@ -1,0 +1,92 @@
+"use client";
+import { useState } from "react";
+
+export default function BudgetOptimizer() {
+  const [form, setForm] = useState({
+    totalBudget: "",
+    projectType: "renovation",
+    targetSavings: "",
+    lineItems: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const optimize = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Project Type</label>
+          <select value={form.projectType} onChange={e => setForm({...form, projectType: e.target.value})}
+            className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm">
+            <option value="renovation">Renovation</option>
+            <option value="new-construction-single-family">New Construction - Single Family</option>
+            <option value="new-construction-townhouse">New Construction - Townhouse</option>
+            <option value="new-construction-apartment">New Construction - Apartment</option>
+            <option value="new-construction-commercial">New Construction - Commercial</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Total Budget ($)</label>
+          <input type="number" placeholder="250000" value={form.totalBudget}
+            onChange={e => setForm({...form, totalBudget: e.target.value})}
+            className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Target Savings ($)</label>
+          <input type="number" placeholder="25000" value={form.targetSavings}
+            onChange={e => setForm({...form, targetSavings: e.target.value})}
+            className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Project Details</label>
+          <textarea rows={4} placeholder="Describe your project. Example: 1800 sqft house renovation, granite counters, hardwood floors, custom cabinets, premium fixtures..."
+            value={form.lineItems}
+            onChange={e => setForm({...form, lineItems: e.target.value})}
+            className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm" />
+        </div>
+        <button onClick={optimize} disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl">
+          {loading ? "AI analyzing your budget..." : "Get AI Cost Cutting Suggestions"}
+        </button>
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+            <p className="text-sm text-slate-600 mb-1">Total Potential Savings</p>
+            <p className="text-4xl font-bold text-green-600">${Math.round(result.totalPotentialSavings || 0).toLocaleString()}</p>
+            <p className="text-sm text-slate-600 mt-3">{result.summary}</p>
+          </div>
+
+          <div className="space-y-3">
+            {result.suggestions?.map((s: any, i: number) => (
+              <div key={i} className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h4 className="font-bold text-slate-900">{s.category}</h4>
+                  <span className="bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">Save ${Math.round(s.savings).toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-slate-600 mb-2"><b>Current:</b> {s.currentChoice}</p>
+                <p className="text-sm text-slate-600 mb-2"><b>Suggested:</b> {s.suggestion}</p>
+                <p className="text-xs text-yellow-700 bg-yellow-50 rounded p-2"><b>Trade-off:</b> {s.tradeoff}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
