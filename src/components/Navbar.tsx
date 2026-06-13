@@ -1,76 +1,99 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 
 export default function Navbar({ session }: { session: Session | null }) {
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const tools = [
+    { name: "AI Deal Analyzer", href: "/analyze", desc: "Score any property in seconds" },
+    { name: "Cash Out Refinance", href: "/refinance", desc: "Pull equity from your property" },
+    { name: "Hard Money Loan", href: "/hardmoney", desc: "Fix and flip calculator" },
+    { name: "DSCR Loan", href: "/dscr", desc: "Qualify rentals by cash flow" },
+    { name: "Construction Timeline", href: "/construction", desc: "Estimate build cost and time" },
+    { name: "Community Development", href: "/community", desc: "Plan multi unit projects" },
+    { name: "Budget Optimizer", href: "/budget", desc: "AI cost cutting suggestions" },
+  ];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-emerald-900/30">
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
-            K
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight">
-            Kata<span className="text-emerald-400">Deals</span>
-          </span>
+    <nav className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-xl">🏠</span>
+          <span className="text-white font-bold text-lg">KataDeals</span>
         </Link>
 
-        {/* Navigation */}
-        <div className="flex items-center gap-1">
-          <Link
-            href="/pricing"
-            className="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-          >
-            Pricing
-          </Link>
-
+        <div className="hidden md:flex items-center gap-6">
+          <div className="relative">
+            <button onClick={() => setToolsOpen(!toolsOpen)}
+              className="text-slate-400 hover:text-white text-sm transition-colors flex items-center gap-1">
+              Tools <span className="text-xs">▼</span>
+            </button>
+            {toolsOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setToolsOpen(false)}></div>
+                <div className="absolute right-0 top-8 bg-white rounded-2xl shadow-2xl border border-slate-200 w-80 z-50 overflow-hidden">
+                  {tools.map((tool) => (
+                    <Link key={tool.href} href={tool.href} onClick={() => setToolsOpen(false)}
+                      className="block px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0">
+                      <p className="font-semibold text-slate-900 text-sm">{tool.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{tool.desc}</p>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <Link href="/pricing" className="text-slate-400 hover:text-white text-sm transition-colors">Pricing</Link>
           {session && (
-            <>
-              <Link
-                href="/analyze"
-                className="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-              >
-                Analyze
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-              >
-                Dashboard
-              </Link>
-            </>
+            <Link href="/dashboard" className="text-slate-400 hover:text-white text-sm transition-colors">Dashboard</Link>
           )}
+        </div>
 
-          <div className="w-px h-6 bg-slate-800 mx-2" />
-
+        <div className="flex items-center gap-3">
           {session ? (
-            <div className="flex items-center gap-3">
+            <>
               {session.user?.image && (
-                <img
-                  src={session.user.image}
-                  alt="avatar"
-                  className="w-8 h-8 rounded-full border-2 border-emerald-500/30"
-                />
+                <img src={session.user.image} alt="avatar" className="w-8 h-8 rounded-full border-2 border-slate-700" />
               )}
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
-              >
+              <button onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-slate-400 hover:text-white text-sm transition-colors">
                 Sign Out
               </button>
-            </div>
+            </>
           ) : (
-            <Link
-              href="/api/auth/signin"
-              className="bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
-            >
+            <Link href="/api/auth/signin"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
               Sign In
             </Link>
           )}
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-white p-2">
+            <span className="text-xl">{mobileOpen ? "✕" : "☰"}</span>
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <div className="md:hidden bg-slate-900 border-t border-slate-800 px-4 py-4 space-y-1">
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Tools</p>
+          {tools.map((tool) => (
+            <Link key={tool.href} href={tool.href} onClick={() => setMobileOpen(false)}
+              className="block py-2 text-slate-300 hover:text-white text-sm">
+              {tool.name}
+            </Link>
+          ))}
+          <div className="pt-3 mt-3 border-t border-slate-800 space-y-2">
+            <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block py-2 text-slate-300 hover:text-white text-sm">Pricing</Link>
+            {session && (
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block py-2 text-slate-300 hover:text-white text-sm">Dashboard</Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
