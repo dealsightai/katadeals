@@ -1,0 +1,172 @@
+"use client";
+import { useState } from "react";
+
+export default function DscrCalculator() {
+  const [form, setForm] = useState({
+    purchasePrice: "",
+    monthlyRent: "",
+    propertyTax: "",
+    insurance: "",
+    hoa: "0",
+    maintenance: "5",
+    vacancy: "5",
+    propMgmt: "8",
+    rate: "7.5",
+    term: "30",
+    downPayment: "20",
+    minDscr: "1.25",
+  });
+  const [result, setResult] = useState<any>(null);
+
+  const calculate = () => {
+    const price = parseFloat(form.purchasePrice) || 0;
+    const rent = parseFloat(form.monthlyRent) || 0;
+    const tax = parseFloat(form.propertyTax) || 0;
+    const ins = parseFloat(form.insurance) || 0;
+    const hoa = parseFloat(form.hoa) || 0;
+    const maintPct = parseFloat(form.maintenance) / 100;
+    const vacancyPct = parseFloat(form.vacancy) / 100;
+    const mgmtPct = parseFloat(form.propMgmt) / 100;
+    const rate = parseFloat(form.rate) / 100 / 12;
+    const term = parseFloat(form.term) * 12;
+    const downPct = parseFloat(form.downPayment) / 100;
+    const minDscr = parseFloat(form.minDscr);
+
+    const downPaymentAmount = price * downPct;
+    const loanAmount = price - downPaymentAmount;
+    const monthlyPayment = (loanAmount * rate * Math.pow(1 + rate, term)) / (Math.pow(1 + rate, term) - 1);
+
+    const monthlyTax = tax / 12;
+    const monthlyIns = ins / 12;
+    const monthlyMaint = rent * maintPct;
+    const monthlyVacancy = rent * vacancyPct;
+    const monthlyMgmt = rent * mgmtPct;
+
+    const totalExpenses = monthlyTax + monthlyIns + hoa + monthlyMaint + monthlyVacancy + monthlyMgmt;
+    const noi = rent - totalExpenses;
+    const annualNoi = noi * 12;
+    const annualDebtService = monthlyPayment * 12;
+
+    const dscr = annualDebtService > 0 ? annualNoi / annualDebtService : 0;
+    const cashFlow = noi - monthlyPayment;
+    const annualCashFlow = cashFlow * 12;
+    const cashOnCash = downPaymentAmount > 0 ? (annualCashFlow / downPaymentAmount) * 100 : 0;
+    const capRate = price > 0 ? (annualNoi / price) * 100 : 0;
+
+    let qualifies = "QUALIFIES";
+    let reason = "Property meets DSCR requirements with strong cash flow.";
+    if (dscr < 1.0) {
+      qualifies = "DOES NOT QUALIFY";
+      reason = "Rent does not cover debt service. Need higher rent or lower loan amount.";
+    } else if (dscr < minDscr) {
+      qualifies = "MARGINAL";
+      reason = "DSCR below target. May need 25% down or higher to qualify.";
+    }
+
+    setResult({
+      loanAmount, downPaymentAmount, monthlyPayment, totalExpenses,
+      noi, dscr, cashFlow, annualCashFlow, cashOnCash, capRate,
+      qualifies, reason
+    });
+  };
+
+  const update = (field: string, value: string) => setForm({ ...form, [field]: value });
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-slate-900">Property Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Purchase Price ($)</label>
+            <input type="number" placeholder="350000" value={form.purchasePrice} onChange={e => update("purchasePrice", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Monthly Rent ($)</label>
+            <input type="number" placeholder="2800" value={form.monthlyRent} onChange={e => update("monthlyRent", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Annual Property Tax ($)</label>
+            <input type="number" placeholder="4200" value={form.propertyTax} onChange={e => update("propertyTax", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Annual Insurance ($)</label>
+            <input type="number" placeholder="1800" value={form.insurance} onChange={e => update("insurance", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">HOA Monthly ($)</label>
+            <input type="number" value={form.hoa} onChange={e => update("hoa", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-slate-900">Operating Expenses %</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Maintenance %</label>
+            <input type="number" step="0.1" value={form.maintenance} onChange={e => update("maintenance", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Vacancy %</label>
+            <input type="number" step="0.1" value={form.vacancy} onChange={e => update("vacancy", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Property Mgmt %</label>
+            <input type="number" step="0.1" value={form.propMgmt} onChange={e => update("propMgmt", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-slate-900">Loan Terms</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Rate %</label>
+            <input type="number" step="0.1" value={form.rate} onChange={e => update("rate", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Years</label>
+            <input type="number" value={form.term} onChange={e => update("term", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Down %</label>
+            <input type="number" value={form.downPayment} onChange={e => update("downPayment", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Min DSCR</label>
+            <input type="number" step="0.05" value={form.minDscr} onChange={e => update("minDscr", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <button onClick={calculate} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl">Calculate DSCR Loan</button>
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+          <div className={`border rounded-2xl p-6 ${result.qualifies === "QUALIFIES" ? "bg-green-50 border-green-200" : result.qualifies === "MARGINAL" ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200"}`}>
+            <div className="flex items-center gap-3 mb-2">
+              <span className={`text-white font-bold px-4 py-1 rounded-lg ${result.qualifies === "QUALIFIES" ? "bg-green-600" : result.qualifies === "MARGINAL" ? "bg-yellow-500" : "bg-red-500"}`}>{result.qualifies}</span>
+              <span className="text-2xl font-bold">DSCR: {result.dscr.toFixed(2)}</span>
+            </div>
+            <p className="text-slate-700 text-sm">{result.reason}</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Loan Amount</p><p className="text-xl font-bold">${Math.round(result.loanAmount).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Down Payment</p><p className="text-xl font-bold text-blue-600">${Math.round(result.downPaymentAmount).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Monthly Payment</p><p className="text-xl font-bold">${Math.round(result.monthlyPayment).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Monthly NOI</p><p className="text-xl font-bold">${Math.round(result.noi).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Monthly Cash Flow</p><p className={`text-xl font-bold ${result.cashFlow > 0 ? "text-green-600" : "text-red-600"}`}>${Math.round(result.cashFlow).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Cap Rate</p><p className="text-xl font-bold">{result.capRate.toFixed(2)}%</p></div>
+          </div>
+
+          <div className="bg-white border-2 border-blue-500 rounded-2xl p-6 text-center">
+            <p className="text-sm text-slate-600 mb-1">Annual Cash Flow</p>
+            <p className={`text-4xl font-bold ${result.annualCashFlow > 0 ? "text-green-600" : "text-red-600"}`}>${Math.round(result.annualCashFlow).toLocaleString()}</p>
+            <p className="text-sm text-slate-500 mt-2">Cash on Cash Return: <span className="font-bold">{result.cashOnCash.toFixed(2)}%</span></p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
