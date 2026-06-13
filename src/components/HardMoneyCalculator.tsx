@@ -1,0 +1,146 @@
+"use client";
+import { useState } from "react";
+
+export default function HardMoneyCalculator() {
+  const [form, setForm] = useState({
+    purchasePrice: "",
+    rehabCost: "",
+    arv: "",
+    ltc: "85",
+    ltv: "70",
+    rate: "12",
+    points: "2",
+    holdMonths: "6",
+    sellingCosts: "8",
+  });
+  const [result, setResult] = useState<any>(null);
+
+  const calculate = () => {
+    const purchase = parseFloat(form.purchasePrice) || 0;
+    const rehab = parseFloat(form.rehabCost) || 0;
+    const arv = parseFloat(form.arv) || 0;
+    const ltc = parseFloat(form.ltc) / 100;
+    const ltv = parseFloat(form.ltv) / 100;
+    const rate = parseFloat(form.rate) / 100 / 12;
+    const points = parseFloat(form.points) / 100;
+    const months = parseFloat(form.holdMonths) || 6;
+    const sellingPct = parseFloat(form.sellingCosts) / 100;
+
+    const totalProjectCost = purchase + rehab;
+    const maxByLTC = totalProjectCost * ltc;
+    const maxByLTV = arv * ltv;
+    const loanAmount = Math.min(maxByLTC, maxByLTV);
+
+    const cashDown = totalProjectCost - loanAmount;
+    const originationFee = loanAmount * points;
+    const monthlyPayment = loanAmount * rate;
+    const totalInterest = monthlyPayment * months;
+    const totalLoanCost = originationFee + totalInterest;
+
+    const sellingCosts = arv * sellingPct;
+    const profit = arv - totalProjectCost - totalLoanCost - sellingCosts;
+    const roi = cashDown > 0 ? (profit / cashDown) * 100 : 0;
+    const annualizedRoi = (roi / months) * 12;
+
+    let recommendation = "PROCEED";
+    let reason = "Strong profit potential with this hard money loan.";
+    if (profit < 10000) {
+      recommendation = "PASS";
+      reason = "Profit margin too thin to justify hard money risk.";
+    } else if (profit < 25000) {
+      recommendation = "CAUTION";
+      reason = "Decent profit but limited margin for error.";
+    }
+
+    setResult({
+      loanAmount, cashDown, originationFee, monthlyPayment, totalInterest,
+      totalLoanCost, sellingCosts, profit, roi, annualizedRoi, recommendation, reason
+    });
+  };
+
+  const update = (field: string, value: string) => setForm({ ...form, [field]: value });
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-slate-900">The Deal</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Purchase Price ($)</label>
+            <input type="number" placeholder="180000" value={form.purchasePrice} onChange={e => update("purchasePrice", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Rehab Cost ($)</label>
+            <input type="number" placeholder="45000" value={form.rehabCost} onChange={e => update("rehabCost", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">After Repair Value ($)</label>
+            <input type="number" placeholder="320000" value={form.arv} onChange={e => update("arv", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+        <h3 className="font-bold text-slate-900">Loan Terms</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">LTC %</label>
+            <input type="number" value={form.ltc} onChange={e => update("ltc", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">LTV %</label>
+            <input type="number" value={form.ltv} onChange={e => update("ltv", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Rate %</label>
+            <input type="number" step="0.1" value={form.rate} onChange={e => update("rate", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Points %</label>
+            <input type="number" step="0.1" value={form.points} onChange={e => update("points", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Hold Period (months)</label>
+            <input type="number" value={form.holdMonths} onChange={e => update("holdMonths", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-600 mb-1">Selling Costs %</label>
+            <input type="number" step="0.1" value={form.sellingCosts} onChange={e => update("sellingCosts", e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <button onClick={calculate} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl">Calculate Hard Money Loan</button>
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+          <div className={`border rounded-2xl p-6 ${result.recommendation === "PROCEED" ? "bg-green-50 border-green-200" : result.recommendation === "CAUTION" ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200"}`}>
+            <div className="flex items-center gap-3">
+              <span className={`text-white font-bold px-4 py-1 rounded-lg ${result.recommendation === "PROCEED" ? "bg-green-600" : result.recommendation === "CAUTION" ? "bg-yellow-500" : "bg-red-500"}`}>{result.recommendation}</span>
+              <p className="text-slate-700 text-sm">{result.reason}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Loan Amount</p><p className="text-xl font-bold">${Math.round(result.loanAmount).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Cash Down</p><p className="text-xl font-bold text-blue-600">${Math.round(result.cashDown).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Monthly Payment</p><p className="text-xl font-bold">${Math.round(result.monthlyPayment).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Origination Fee</p><p className="text-xl font-bold text-red-600">${Math.round(result.originationFee).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Total Interest</p><p className="text-xl font-bold text-red-600">${Math.round(result.totalInterest).toLocaleString()}</p></div>
+            <div className="bg-white border rounded-xl p-4"><p className="text-xs text-slate-500">Selling Costs</p><p className="text-xl font-bold text-red-600">${Math.round(result.sellingCosts).toLocaleString()}</p></div>
+          </div>
+
+          <div className="bg-white border-2 border-blue-500 rounded-2xl p-6 text-center">
+            <p className="text-sm text-slate-600 mb-1">Estimated Profit</p>
+            <p className={`text-4xl font-bold ${result.profit > 0 ? "text-green-600" : "text-red-600"}`}>${Math.round(result.profit).toLocaleString()}</p>
+            <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+              <div><p className="text-slate-500">Cash on Cash ROI</p><p className="font-bold">{result.roi.toFixed(1)}%</p></div>
+              <div><p className="text-slate-500">Annualized ROI</p><p className="font-bold">{result.annualizedRoi.toFixed(1)}%</p></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
